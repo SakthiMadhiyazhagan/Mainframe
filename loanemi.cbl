@@ -74,10 +74,33 @@ PROCEDURE DIVISION.
 
         IF SQLCODE = 0
             COMPUTE WS-INTEREST = WS-OUTSTANDING * 
-                WS-INTEREST-RATE / 100 /12
+                WS-INTEREST-RATE / 12 /100
 
             COMPUTE WS-PRINCIPAL-PAY = WS-EMI -
                 WS-INTEREST
 
             COMPUTE WS-OUTSTANDING = WS-OUTSTANDING -
-                WS-PRINCIPAL-PAY
+                WS-PRINCIPAL-PAY 
+
+            IF WS-OUTSTANDING <= 0
+                MOVE 0 TO WS-OUTSTANDING
+            END-IF
+
+            EXEC SQL
+                UPDATE LOAN_ACCOUNT
+                SET OUTSTANDING = :WS-OUTSTANDING
+                WHERE LOAN_NO = :WS-LOAN_NO
+            END-EXEC
+
+        END-IF
+    END-PERFORM.
+
+    EXEC SQL
+        COMMIT
+    END-EXEC.
+
+    EXEC SQL
+        CLOSE C1
+    END-EXEC.
+
+    GOBACK.
